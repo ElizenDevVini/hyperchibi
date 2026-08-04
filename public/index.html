@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hyperchibi — chibi perp desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0b0d;
+  --panel: #0f1114;
+  --edge: #22262c;
+  --text: #cfd6dd;
+  --dim: #6b7480;
+  --long: #3ecf6e;
+  --short: #ff5d5d;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+body::after { /* faint scanlines over everything */
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 1px, transparent 1px 3px);
+  z-index: 9;
+}
+
+header {
+  display: flex; align-items: baseline; gap: 16px;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid var(--edge);
+}
+h1 {
+  font-family: Silkscreen, monospace;
+  font-size: 20px; font-weight: 700;
+  letter-spacing: 1px;
+}
+h1 .hyper { color: var(--text); }
+h1 .chibi { color: #ff7ab8; }
+.sub { color: var(--dim); font-size: 12px; }
+.desk-eq { margin-left: auto; font-size: 13px; color: var(--dim); }
+.desk-eq b { color: var(--text); font-weight: 600; }
+.live { color: var(--long); }
+.live::before {
+  content: ""; display: inline-block; width: 7px; height: 7px;
+  background: var(--long); margin-right: 6px;
+  animation: blink 2s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: .25; } }
+
+.tape {
+  display: flex; border-bottom: 1px solid var(--edge);
+  overflow-x: auto;
+}
+.tape .coin {
+  flex: 1; min-width: 130px;
+  padding: 8px 20px;
+  border-right: 1px solid var(--edge);
+}
+.tape .coin:last-child { border-right: none; }
+.tape .sym { font-family: Silkscreen, monospace; font-size: 11px; color: var(--dim); }
+.tape .px { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tape .chg { font-size: 11px; }
+.up { color: var(--long); }
+.down { color: var(--short); }
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  min-height: calc(100vh - 110px);
+}
+.agents {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+  gap: 16px;
+  padding: 16px;
+}
+@media (max-width: 1100px) {
+  main { grid-template-columns: 1fr; }
+  .agents { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  grid-template-rows: auto auto 44px;
+  position: relative;
+}
+.card::before { /* top edge in agent color */
+  content: "";
+  position: absolute; top: -1px; left: -1px; right: -1px;
+  height: 2px;
+  background: var(--ac);
+}
+.sprite {
+  grid-row: 1 / 3;
+  width: 128px; height: 128px;
+  object-fit: cover;
+  image-rendering: pixelated;
+  border-right: 1px solid var(--edge);
+  align-self: start;
+}
+.card .head {
+  padding: 10px 14px 0;
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+}
+.card .name {
+  font-family: Silkscreen, monospace;
+  font-size: 15px; font-weight: 700;
+  color: var(--ac);
+}
+.card .tagline { color: var(--dim); font-size: 11px; }
+.card .nums {
+  padding: 4px 14px 8px;
+  display: flex; gap: 22px; align-items: baseline; flex-wrap: wrap;
+}
+.eq { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pnl, .stat { font-size: 12px; font-variant-numeric: tabular-nums; }
+.stat { color: var(--dim); }
+.posline {
+  grid-column: 1 / 3;
+  border-top: 1px solid var(--edge);
+  padding: 0 14px;
+  display: flex; align-items: center; gap: 14px;
+  font-size: 12px; font-variant-numeric: tabular-nums;
+  overflow: hidden;
+}
+.posline .flat { color: var(--dim); }
+.side { font-family: Silkscreen, monospace; font-size: 11px; }
+.posline canvas { margin-left: auto; }
+
+.feedwrap {
+  border-left: 1px solid var(--edge);
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - 110px);
+}
+.feedwrap .title {
+  font-family: Silkscreen, monospace;
+  font-size: 11px; color: var(--dim);
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--edge);
+}
+#feed { overflow-y: auto; padding: 8px 16px 16px; }
+#feed .line { padding: 5px 0; border-bottom: 1px solid #14171b; }
+#feed .t { color: #3d444d; font-size: 11px; margin-right: 8px; }
+#feed .who { font-family: Silkscreen, monospace; font-size: 10px; margin-right: 8px; }
+#feed .msg { color: #aab3bd; }
+#feed .line:first-child .msg { color: var(--text); }
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="hyper">HYPER</span><span class="chibi">CHIBI</span></h1>
+  <span class="sub">four chibi girls paper-trading perps on live hyperliquid mids</span>
+  <span class="desk-eq live">desk <b id="deskEq">—</b></span>
+</header>
+
+<div class="tape" id="tape"></div>
+
+<main>
+  <section class="agents" id="agents"></section>
+  <aside class="feedwrap">
+    <div class="title">TAPE — what the girls are doing</div>
+    <div id="feed"></div>
+  </aside>
+</main>
+
+<script>
+const fmtUsd = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPx = v => v >= 1000 ? v.toLocaleString('en-US', { maximumFractionDigits: 1 })
+  : v >= 10 ? v.toFixed(3) : v.toFixed(5);
+const START = 10000;
+
+function agentCard(a) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.id = 'card-' + a.id;
+  el.style.setProperty('--ac', a.color);
+  el.innerHTML = `
+    <img class="sprite" src="/sprites/${a.id}.png" alt="${a.name}">
+    <div class="head">
+      <span class="name">${a.name}</span>
+      <span class="tagline">${a.tagline}</span>
+    </div>
+    <div class="nums">
+      <span class="eq" data-eq>—</span>
+      <span class="pnl" data-pnl></span>
+      <span class="stat" data-rec></span>
+    </div>
+    <div class="posline">
+      <span data-pos class="flat">flat, watching the tape</span>
+      <canvas data-spark width="150" height="34"></canvas>
+    </div>`;
+  return el;
+}
+
+function drawSpark(canvas, data, color) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  if (data.length < 2) return;
+  const lo = Math.min(...data, START), hi = Math.max(...data, START);
+  const pad = (hi - lo) * 0.1 || 1;
+  const y = v => H - 2 - (v - lo + pad) / (hi - lo + 2 * pad) * (H - 4);
+  const x = i => i / (data.length - 1) * (W - 2) + 1;
+  ctx.strokeStyle = '#2a2f36';
+  ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(0, y(START)); ctx.lineTo(W, y(START)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  data.forEach((v, i) => i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v)));
+  ctx.stroke();
+}
+
+function render(s) {
+  // ticker
+  const tape = document.getElementById('tape');
+  tape.innerHTML = s.coins.map(c => {
+    const cls = c.chg1h >= 0 ? 'up' : 'down';
+    const sign = c.chg1h >= 0 ? '+' : '';
+    return `<div class="coin"><div class="sym">${c.coin}-PERP</div>
+      <div class="px">${c.px ? fmtPx(c.px) : '—'}</div>
+      <div class="chg ${cls}">${sign}${(c.chg1h * 100).toFixed(2)}% 1h</div></div>`;
+  }).join('');
+
+  // agents
+  const grid = document.getElementById('agents');
+  let deskEq = 0;
+  for (const a of s.agents) {
+    deskEq += a.equity;
+    let card = document.getElementById('card-' + a.id);
+    if (!card) { card = agentCard(a); grid.appendChild(card); }
+    card.querySelector('[data-eq]').textContent = fmtUsd(a.equity);
+    const pnl = a.equity - START;
+    const pnlEl = card.querySelector('[data-pnl]');
+    pnlEl.textContent = (pnl >= 0 ? '+' : '') + fmtUsd(pnl).replace('$-', '-$');
+    pnlEl.className = 'pnl ' + (pnl >= 0 ? 'up' : 'down');
+    card.querySelector('[data-rec]').textContent =
+      a.trades ? a.wins + 'W / ' + (a.trades - a.wins) + 'L' : 'no trades yet';
+    const posEl = card.querySelector('[data-pos]');
+    if (a.pos) {
+      const dir = a.pos.side === 1 ? 'LONG' : 'SHORT';
+      const cls = a.pos.side === 1 ? 'up' : 'down';
+      const ucls = a.pos.upnl >= 0 ? 'up' : 'down';
+      const sign = a.pos.upnl >= 0 ? '+' : '';
+      posEl.className = '';
+      posEl.innerHTML = `<span class="side ${cls}">${dir}</span> ${a.pos.coin} ${a.pos.lev}x
+        @ ${fmtPx(a.pos.entry)} <span class="${ucls}">${sign}${a.pos.upnl.toFixed(2)}</span>`;
+    } else {
+      posEl.className = 'flat';
+      posEl.textContent = 'flat, watching the tape';
+    }
+    drawSpark(card.querySelector('[data-spark]'), a.spark, a.color);
+  }
+  document.getElementById('deskEq').textContent = fmtUsd(deskEq);
+
+  // feed, newest first
+  const feed = document.getElementById('feed');
+  feed.innerHTML = s.feed.slice().reverse().map(f => {
+    const t = new Date(f.t).toLocaleTimeString('en-US', { hour12: false });
+    return `<div class="line"><span class="t">${t}</span><span class="who" style="color:${f.color}">${f.agent}</span><span class="msg">${f.text}</span></div>`;
+  }).join('');
+}
+
+const es = new EventSource('/api/stream');
+es.onmessage = e => render(JSON.parse(e.data));
+</script>
+</body>
+</html>
