@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>hyperchibi — chibi perp desk</title>
+<title>hyperchibi — pick a girl, she trades perps for you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
   --short: #ff5d5d;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; }
+html, body { min-height: 100%; }
 body {
   background: var(--bg);
   color: var(--text);
@@ -26,13 +26,20 @@ body {
   font-size: 13px;
   line-height: 1.5;
 }
-body::after { /* faint scanlines over everything */
+body::after {
   content: "";
   position: fixed; inset: 0;
   pointer-events: none;
   background: repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 1px, transparent 1px 3px);
   z-index: 9;
 }
+button {
+  font-family: "IBM Plex Mono", monospace;
+  cursor: pointer;
+}
+.up { color: var(--long); }
+.down { color: var(--short); }
+.hidden { display: none !important; }
 
 header {
   display: flex; align-items: baseline; gap: 16px;
@@ -44,12 +51,9 @@ h1 {
   font-size: 20px; font-weight: 700;
   letter-spacing: 1px;
 }
-h1 .hyper { color: var(--text); }
 h1 .chibi { color: #ff7ab8; }
 .sub { color: var(--dim); font-size: 12px; }
-.desk-eq { margin-left: auto; font-size: 13px; color: var(--dim); }
-.desk-eq b { color: var(--text); font-weight: 600; }
-.live { color: var(--long); }
+.live { margin-left: auto; color: var(--long); font-size: 12px; }
 .live::before {
   content: ""; display: inline-block; width: 7px; height: 7px;
   background: var(--long); margin-right: 6px;
@@ -57,95 +61,137 @@ h1 .chibi { color: #ff7ab8; }
 }
 @keyframes blink { 50% { opacity: .25; } }
 
-.tape {
-  display: flex; border-bottom: 1px solid var(--edge);
-  overflow-x: auto;
-}
-.tape .coin {
-  flex: 1; min-width: 130px;
-  padding: 8px 20px;
-  border-right: 1px solid var(--edge);
-}
+.tape { display: flex; border-bottom: 1px solid var(--edge); overflow-x: auto; }
+.tape .coin { flex: 1; min-width: 128px; padding: 8px 20px; border-right: 1px solid var(--edge); }
 .tape .coin:last-child { border-right: none; }
 .tape .sym { font-family: Silkscreen, monospace; font-size: 11px; color: var(--dim); }
 .tape .px { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .tape .chg { font-size: 11px; }
-.up { color: var(--long); }
-.down { color: var(--short); }
 
-main {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  min-height: calc(100vh - 110px);
+/* ---------- picker ---------- */
+
+.pitchhead { padding: 34px 24px 6px; text-align: center; }
+.pitchhead h2 {
+  font-family: Silkscreen, monospace;
+  font-size: 26px; letter-spacing: 2px;
 }
-.agents {
+.pitchhead p { color: var(--dim); margin-top: 6px; }
+
+.picker {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-content: start;
+  grid-template-columns: repeat(4, minmax(230px, 280px));
+  justify-content: center;
   gap: 16px;
-  padding: 16px;
+  padding: 24px;
 }
-@media (max-width: 1100px) {
-  main { grid-template-columns: 1fr; }
-  .agents { grid-template-columns: 1fr; }
-}
+@media (max-width: 1100px) { .picker { grid-template-columns: repeat(2, minmax(230px, 320px)); } }
+@media (max-width: 560px) { .picker { grid-template-columns: 1fr; } }
 
-.card {
+.gcard {
   background: var(--panel);
   border: 1px solid var(--edge);
+  border-top: 2px solid var(--ac);
+  display: flex; flex-direction: column;
+  transition: transform .12s steps(2);
+}
+.gcard:hover { transform: translateY(-4px); }
+.gcard img {
+  width: 100%; aspect-ratio: 1;
+  object-fit: cover;
+  image-rendering: pixelated;
+  border-bottom: 1px solid var(--edge);
+}
+.gcard .body { padding: 12px 14px; flex: 1; }
+.gcard .name { font-family: Silkscreen, monospace; font-size: 16px; color: var(--ac); }
+.gcard .tagline { color: var(--dim); font-size: 11px; margin-bottom: 8px; }
+.gcard .pitch { font-size: 12px; color: #9aa4af; }
+.gcard .record {
+  border-top: 1px solid var(--edge);
+  padding: 8px 14px;
+  font-size: 12px; font-variant-numeric: tabular-nums;
+  display: flex; justify-content: space-between; gap: 8px;
+  color: var(--dim);
+}
+.gcard .record b { font-weight: 600; }
+.gcard .hire {
+  border: none; border-top: 1px solid var(--edge);
+  background: var(--ac); color: #0a0b0d;
+  font-family: Silkscreen, monospace;
+  font-size: 12px; padding: 11px;
+}
+.gcard .hire:hover { filter: brightness(1.15); }
+.pickerfoot { text-align: center; color: #3d444d; font-size: 11px; padding: 0 24px 28px; }
+
+/* ---------- desk ---------- */
+
+main.desk { display: grid; grid-template-columns: 1fr 360px; min-height: calc(100vh - 110px); }
+@media (max-width: 1000px) { main.desk { grid-template-columns: 1fr; } }
+.deskleft { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+.hero {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-top: 2px solid var(--ac);
   display: grid;
-  grid-template-columns: 128px 1fr;
-  grid-template-rows: auto auto 44px;
-  position: relative;
+  grid-template-columns: 220px 1fr;
 }
-.card::before { /* top edge in agent color */
-  content: "";
-  position: absolute; top: -1px; left: -1px; right: -1px;
-  height: 2px;
-  background: var(--ac);
-}
-.sprite {
-  grid-row: 1 / 3;
-  width: 128px; height: 128px;
+.hero img {
+  width: 220px; height: 220px;
   object-fit: cover;
   image-rendering: pixelated;
   border-right: 1px solid var(--edge);
-  align-self: start;
 }
-.card .head {
-  padding: 10px 14px 0;
-  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+@media (max-width: 640px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero img { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--edge); }
 }
-.card .name {
-  font-family: Silkscreen, monospace;
-  font-size: 15px; font-weight: 700;
-  color: var(--ac);
+.hero .info { padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; }
+.hero .toprow { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.hero .name { font-family: Silkscreen, monospace; font-size: 18px; color: var(--ac); }
+.hero .role { color: var(--dim); font-size: 11px; }
+.hero .fire {
+  margin-left: auto;
+  background: none; border: 1px solid var(--edge);
+  color: var(--dim); font-size: 11px; padding: 3px 10px;
 }
-.card .tagline { color: var(--dim); font-size: 11px; }
-.card .nums {
-  padding: 4px 14px 8px;
-  display: flex; gap: 22px; align-items: baseline; flex-wrap: wrap;
-}
-.eq { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.pnl, .stat { font-size: 12px; font-variant-numeric: tabular-nums; }
-.stat { color: var(--dim); }
-.posline {
-  grid-column: 1 / 3;
-  border-top: 1px solid var(--edge);
-  padding: 0 14px;
-  display: flex; align-items: center; gap: 14px;
-  font-size: 12px; font-variant-numeric: tabular-nums;
-  overflow: hidden;
-}
-.posline .flat { color: var(--dim); }
+.hero .fire:hover { border-color: var(--short); color: var(--short); }
+.hero .eq { font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.hero .row { display: flex; gap: 20px; font-size: 12px; font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.hero .row .lbl { color: var(--dim); }
 .side { font-family: Silkscreen, monospace; font-size: 11px; }
-.posline canvas { margin-left: auto; }
+.hero canvas { margin-top: auto; width: 100%; }
+
+.floor {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+}
+.floor .title {
+  font-family: Silkscreen, monospace; font-size: 10px; color: var(--dim);
+  padding: 8px 14px; border-bottom: 1px solid var(--edge);
+}
+.floor .rows { display: flex; flex-wrap: wrap; }
+.floor .g {
+  flex: 1; min-width: 150px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px;
+  border-right: 1px solid var(--edge);
+  font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.floor .g:last-child { border-right: none; }
+.floor .g .gn { font-family: Silkscreen, monospace; font-size: 11px; }
+.floor .g .sw {
+  margin-left: auto;
+  background: none; border: 1px solid var(--edge); color: var(--dim);
+  font-size: 10px; padding: 2px 8px;
+}
+.floor .g .sw:hover { border-color: var(--text); color: var(--text); }
 
 .feedwrap {
   border-left: 1px solid var(--edge);
   display: flex; flex-direction: column;
   max-height: calc(100vh - 110px);
 }
+@media (max-width: 1000px) { .feedwrap { border-left: none; border-top: 1px solid var(--edge); } }
 .feedwrap .title {
   font-family: Silkscreen, monospace;
   font-size: 11px; color: var(--dim);
@@ -155,62 +201,115 @@ main {
 #feed { overflow-y: auto; padding: 8px 16px 16px; }
 #feed .line { padding: 5px 0; border-bottom: 1px solid #14171b; }
 #feed .t { color: #3d444d; font-size: 11px; margin-right: 8px; }
-#feed .who { font-family: Silkscreen, monospace; font-size: 10px; margin-right: 8px; }
 #feed .msg { color: #aab3bd; }
 #feed .line:first-child .msg { color: var(--text); }
 </style>
 </head>
 <body>
 <header>
-  <h1><span class="hyper">HYPER</span><span class="chibi">CHIBI</span></h1>
-  <span class="sub">four chibi girls paper-trading perps on live hyperliquid mids</span>
-  <span class="desk-eq live">desk <b id="deskEq">—</b></span>
+  <h1>HYPER<span class="chibi">CHIBI</span></h1>
+  <span class="sub">pick a girl. she trades hyperliquid perps for you.</span>
+  <span class="live" id="traders">—</span>
 </header>
 
 <div class="tape" id="tape"></div>
 
-<main>
-  <section class="agents" id="agents"></section>
+<div id="picker" class="hidden">
+  <div class="pitchhead">
+    <h2>PICK YOUR GIRL</h2>
+    <p>10,000 paper USDC on the desk. live hyperliquid prices. she does the rest.</p>
+  </div>
+  <div class="picker" id="girlCards"></div>
+  <p class="pickerfoot">records shown are each girl's house account, running since the desk opened. paper trading only.</p>
+</div>
+
+<main class="desk hidden" id="desk">
+  <div class="deskleft">
+    <div class="hero" id="hero">
+      <img id="heroImg" src="" alt="">
+      <div class="info">
+        <div class="toprow">
+          <span class="name" id="heroName"></span>
+          <span class="role">trading for you</span>
+          <button class="fire" id="fireBtn">fire her</button>
+        </div>
+        <div class="eq" id="heroEq">—</div>
+        <div class="row">
+          <span id="heroPnl"></span>
+          <span><span class="lbl">record </span><span id="heroRec">—</span></span>
+          <span id="heroPos" class="lbl">flat, watching the tape</span>
+        </div>
+        <canvas id="heroSpark" width="600" height="72"></canvas>
+      </div>
+    </div>
+    <div class="floor">
+      <div class="title">THE FLOOR — house accounts, since open</div>
+      <div class="rows" id="floorRows"></div>
+    </div>
+  </div>
   <aside class="feedwrap">
-    <div class="title">TAPE — what the girls are doing</div>
+    <div class="title">HER TAPE — your account</div>
     <div id="feed"></div>
   </aside>
 </main>
 
 <script>
+const START = 10000;
 const fmtUsd = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPx = v => v >= 1000 ? v.toLocaleString('en-US', { maximumFractionDigits: 1 })
   : v >= 10 ? v.toFixed(3) : v.toFixed(5);
-const START = 10000;
 
-function agentCard(a) {
-  const el = document.createElement('div');
-  el.className = 'card';
-  el.id = 'card-' + a.id;
-  el.style.setProperty('--ac', a.color);
-  el.innerHTML = `
-    <img class="sprite" src="/sprites/${a.id}.png" alt="${a.name}">
-    <div class="head">
-      <span class="name">${a.name}</span>
-      <span class="tagline">${a.tagline}</span>
-    </div>
-    <div class="nums">
-      <span class="eq" data-eq>—</span>
-      <span class="pnl" data-pnl></span>
-      <span class="stat" data-rec></span>
-    </div>
-    <div class="posline">
-      <span data-pos class="flat">flat, watching the tape</span>
-      <canvas data-spark width="150" height="34"></canvas>
-    </div>`;
-  return el;
+let uid = localStorage.getItem('hyperchibi_uid');
+let es = null;
+let lastState = null;
+
+function connect() {
+  if (es) es.close();
+  es = new EventSource('/api/stream' + (uid ? '?uid=' + uid : ''));
+  es.onmessage = e => { lastState = JSON.parse(e.data); render(lastState); };
 }
+
+async function hire(girlId) {
+  const r = await fetch('/api/join', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ girl: girlId }),
+  }).then(r => r.json());
+  if (r.uid) {
+    uid = r.uid;
+    localStorage.setItem('hyperchibi_uid', uid);
+    connect();
+  }
+}
+
+async function quit() {
+  await fetch('/api/quit', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid }),
+  });
+  uid = null;
+  localStorage.removeItem('hyperchibi_uid');
+  connect();
+}
+
+// two-step confirm so nobody rage-quits by accident
+let fireArmed = false;
+document.getElementById('fireBtn').addEventListener('click', e => {
+  if (!fireArmed) {
+    fireArmed = true;
+    e.target.textContent = 'sure? positions close';
+    setTimeout(() => { fireArmed = false; e.target.textContent = 'fire her'; }, 3000);
+  } else {
+    fireArmed = false;
+    e.target.textContent = 'fire her';
+    quit();
+  }
+});
 
 function drawSpark(canvas, data, color) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
-  if (data.length < 2) return;
+  if (!data || data.length < 2) return;
   const lo = Math.min(...data, START), hi = Math.max(...data, START);
   const pad = (hi - lo) * 0.1 || 1;
   const y = v => H - 2 - (v - lo + pad) / (hi - lo + 2 * pad) * (H - 4);
@@ -226,58 +325,104 @@ function drawSpark(canvas, data, color) {
   ctx.stroke();
 }
 
-function render(s) {
-  // ticker
-  const tape = document.getElementById('tape');
-  tape.innerHTML = s.coins.map(c => {
+function posText(pos) {
+  if (!pos) return '<span class="lbl">flat, watching the tape</span>';
+  const dir = pos.side === 1 ? 'LONG' : 'SHORT';
+  const cls = pos.side === 1 ? 'up' : 'down';
+  const ucls = pos.upnl >= 0 ? 'up' : 'down';
+  const sign = pos.upnl >= 0 ? '+' : '';
+  return `<span class="side ${cls}">${dir}</span> ${pos.coin} ${pos.lev}x @ ${fmtPx(pos.entry)}
+    <span class="${ucls}">${sign}${pos.upnl.toFixed(2)}</span>`;
+}
+
+function renderTape(s) {
+  document.getElementById('tape').innerHTML = s.coins.map(c => {
     const cls = c.chg1h >= 0 ? 'up' : 'down';
     const sign = c.chg1h >= 0 ? '+' : '';
     return `<div class="coin"><div class="sym">${c.coin}-PERP</div>
       <div class="px">${c.px ? fmtPx(c.px) : '—'}</div>
       <div class="chg ${cls}">${sign}${(c.chg1h * 100).toFixed(2)}% 1h</div></div>`;
   }).join('');
+  document.getElementById('traders').textContent =
+    s.traders === 1 ? '1 trader on the desk' : s.traders + ' traders on the desk';
+}
 
-  // agents
-  const grid = document.getElementById('agents');
-  let deskEq = 0;
-  for (const a of s.agents) {
-    deskEq += a.equity;
-    let card = document.getElementById('card-' + a.id);
-    if (!card) { card = agentCard(a); grid.appendChild(card); }
-    card.querySelector('[data-eq]').textContent = fmtUsd(a.equity);
-    const pnl = a.equity - START;
-    const pnlEl = card.querySelector('[data-pnl]');
-    pnlEl.textContent = (pnl >= 0 ? '+' : '') + fmtUsd(pnl).replace('$-', '-$');
-    pnlEl.className = 'pnl ' + (pnl >= 0 ? 'up' : 'down');
-    card.querySelector('[data-rec]').textContent =
-      a.trades ? a.wins + 'W / ' + (a.trades - a.wins) + 'L' : 'no trades yet';
-    const posEl = card.querySelector('[data-pos]');
-    if (a.pos) {
-      const dir = a.pos.side === 1 ? 'LONG' : 'SHORT';
-      const cls = a.pos.side === 1 ? 'up' : 'down';
-      const ucls = a.pos.upnl >= 0 ? 'up' : 'down';
-      const sign = a.pos.upnl >= 0 ? '+' : '';
-      posEl.className = '';
-      posEl.innerHTML = `<span class="side ${cls}">${dir}</span> ${a.pos.coin} ${a.pos.lev}x
-        @ ${fmtPx(a.pos.entry)} <span class="${ucls}">${sign}${a.pos.upnl.toFixed(2)}</span>`;
-    } else {
-      posEl.className = 'flat';
-      posEl.textContent = 'flat, watching the tape';
-    }
-    drawSpark(card.querySelector('[data-spark]'), a.spark, a.color);
-  }
-  document.getElementById('deskEq').textContent = fmtUsd(deskEq);
+function renderPicker(s) {
+  const wrap = document.getElementById('girlCards');
+  wrap.innerHTML = s.girls.map(g => {
+    const pnl = g.house.equity - START;
+    const cls = pnl >= 0 ? 'up' : 'down';
+    const sign = pnl >= 0 ? '+' : '';
+    const rec = g.house.trades ? g.house.wins + 'W/' + (g.house.trades - g.house.wins) + 'L' : 'warming up';
+    return `<div class="gcard" style="--ac:${g.color}">
+      <img src="/sprites/${g.id}.png" alt="${g.name}">
+      <div class="body">
+        <div class="name">${g.name}</div>
+        <div class="tagline">${g.tagline}</div>
+        <div class="pitch">${g.pitch}</div>
+      </div>
+      <div class="record">
+        <span>house <b class="${cls}">${sign}${fmtUsd(pnl).replace('$-','-$')}</b></span>
+        <span>${rec}</span>
+      </div>
+      <button class="hire" data-girl="${g.id}">LET HER TRADE FOR YOU</button>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.hire').forEach(b =>
+    b.addEventListener('click', () => hire(b.dataset.girl)));
+}
 
-  // feed, newest first
-  const feed = document.getElementById('feed');
-  feed.innerHTML = s.feed.slice().reverse().map(f => {
+function renderDesk(s) {
+  const you = s.you;
+  const girl = s.girls.find(g => g.id === you.girlId);
+  document.documentElement.style.setProperty('--ac', girl.color);
+  document.getElementById('hero').style.setProperty('--ac', girl.color);
+  const img = document.getElementById('heroImg');
+  const want = '/sprites/' + girl.id + '.png';
+  if (!img.src.endsWith(want)) img.src = want;
+  document.getElementById('heroName').textContent = girl.name;
+  document.getElementById('heroEq').textContent = fmtUsd(you.equity);
+  const pnl = you.equity - START;
+  const pnlEl = document.getElementById('heroPnl');
+  pnlEl.textContent = (pnl >= 0 ? '+' : '') + fmtUsd(pnl).replace('$-', '-$');
+  pnlEl.className = pnl >= 0 ? 'up' : 'down';
+  document.getElementById('heroRec').textContent =
+    you.trades ? you.wins + 'W / ' + (you.trades - you.wins) + 'L' : 'no trades yet';
+  document.getElementById('heroPos').innerHTML = posText(you.pos);
+  drawSpark(document.getElementById('heroSpark'), you.spark, girl.color);
+
+  document.getElementById('floorRows').innerHTML = s.girls.map(g => {
+    const pnl2 = g.house.equity - START;
+    const cls = pnl2 >= 0 ? 'up' : 'down';
+    const sign = pnl2 >= 0 ? '+' : '';
+    const sw = g.id === you.girlId ? '<span class="sw" style="border:none">yours</span>'
+      : `<button class="sw" data-girl="${g.id}">switch</button>`;
+    return `<div class="g"><span class="gn" style="color:${g.color}">${g.name}</span>
+      <span class="${cls}">${sign}${(pnl2 / START * 100).toFixed(2)}%</span>${sw}</div>`;
+  }).join('');
+  document.querySelectorAll('.floor .sw[data-girl]').forEach(b =>
+    b.addEventListener('click', async () => { await quit(); await hire(b.dataset.girl); }));
+
+  document.getElementById('feed').innerHTML = you.feed.slice().reverse().map(f => {
     const t = new Date(f.t).toLocaleTimeString('en-US', { hour12: false });
-    return `<div class="line"><span class="t">${t}</span><span class="who" style="color:${f.color}">${f.agent}</span><span class="msg">${f.text}</span></div>`;
+    return `<div class="line"><span class="t">${t}</span><span class="msg">${f.text}</span></div>`;
   }).join('');
 }
 
-const es = new EventSource('/api/stream');
-es.onmessage = e => render(JSON.parse(e.data));
+function render(s) {
+  renderTape(s);
+  const picking = !s.you;
+  document.getElementById('picker').classList.toggle('hidden', !picking);
+  document.getElementById('desk').classList.toggle('hidden', picking);
+  if (picking) {
+    if (uid) { uid = null; localStorage.removeItem('hyperchibi_uid'); }
+    renderPicker(s);
+  } else {
+    renderDesk(s);
+  }
+}
+
+connect();
 </script>
 </body>
 </html>
